@@ -127,7 +127,7 @@ def remove_nulls(df):
                           # Type of land use the property is zoned for
                           'propertylandusetypeid',
                           #  Type of home heating system
-                          'heatingorsystemtypeid',
+                          'heatingorsystemdesc',
                          'buildingqualitytypeid',
                           'unitcnt'
                          ])
@@ -135,7 +135,7 @@ def remove_nulls(df):
 
 
     # relacing nulls with 'None'
-    df.heatingorsystemdesc.fillna('None', inplace=True)
+    df.heatingorsystemtypeid.fillna('None', inplace=True)
 
 
     # dropping the rest of the nulls
@@ -144,7 +144,107 @@ def remove_nulls(df):
     return df
 
 
-def clean_zillow():
+
+def remove_outliers(df):
+
+    # prep for outlier removal: not including categories fips, pools, zipcode
+    cols_list = df.drop(columns=[
+ 'fips',
+
+ 'propertycountylandusecode',
+ 'rawcensustractandblock',
+ 'regionidcity',
+ 'regionidcounty',
+ 'regionidzip',
+ 
+ 'propertylandusedesc',
+ 
+ 'heatingorsystemtypeid',
+    'transactiondate'])
+
+
+    # remove outliers from each column in cols_list
+    for col in cols_list:
+
+        q1, q3 = df[col].quantile([.25, .75])  # get quartiles
+
+        iqr = q3 - q1   # calculate interquartile range
+
+        upper_bound = q3 + 2 * iqr   # get upper bound
+        lower_bound = q1 - 2 * iqr   # get lower bound
+
+        # return dataframe without outliers
+
+        df = df[(df[col] > lower_bound) & (df[col] < upper_bound)]
+        
+    return df
+
+
+def remove_outliers(df):
+
+    # prep for outlier removal: not including categories fips, pools, zipcode
+    cols_list = df.drop(columns=[
+    'heatingorsystemtypeid',
+     
+     'calculatedbathnbr',
+     'calculatedfinishedsquarefeet',
+     'fips',
+     'fullbathcnt',
+     
+  
+     'propertycountylandusecode',
+     'rawcensustractandblock',
+     'regionidcity',
+     'regionidcounty',
+     'regionidzip',
+     'roomcnt',
+     'yearbuilt',
+ 
+     
+     'assessmentyear',
+     'landtaxvaluedollarcnt',
+    
+     'propertylandusedesc',
+     'logerror',
+     'transactiondate'])
+
+
+    # remove outliers from each column in cols_list
+    for col in cols_list:
+
+        q1, q3 = df[col].quantile([.25, .75])  # get quartiles
+
+        iqr = q3 - q1   # calculate interquartile range
+
+        upper_bound = q3 + 2 * iqr   # get upper bound
+        lower_bound = q1 - 2 * iqr   # get lower bound
+
+        # return dataframe without outliers
+
+        df = df[(df[col] > lower_bound) & (df[col] < upper_bound)]
+        
+    return df
+    
+    
+    
+    
+
+def split(df):
+    
+    from sklearn.model_selection import train_test_split
+    
+    # use remove outliers function
+    df = remove_outliers(df)
+    
+    # train/validate/test split
+    train_validate, test = train_test_split(df, test_size=.2, random_state=123)
+    train, validate = train_test_split(train_validate, test_size=.3, random_state=123)
+    
+    return train, validate, test
+
+
+
+def wrangle_zillow():
     
     df = get_zillow()
     
@@ -152,7 +252,11 @@ def clean_zillow():
     
     df = remove_nulls(df)
     
-    return df
+    df = remove_outliers(df)
+    
+    train, validate, test = split(df)
+    
+    return df, train, validate, test
     
 
 
