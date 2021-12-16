@@ -63,17 +63,17 @@ def get_zillow():
 def get_null_tables():
     
     # create dataframe that has column name as first column
-    col_null = pd.DataFrame()
-    col_null['columns_name'] = df.isna().sum().index
+    col_nulls = pd.DataFrame()
+    col_nulls['columns_name'] = df.isna().sum().index
     
     # create new column that hold the sum of nulls from each column
-    col_null['row_null_count'] = df.isna().sum().values
+    col_nulls['row_null_count'] = df.isna().sum().values
     
     # create new column that hold the average of nulls from each column
-    col_null['row_null_percent'] = df.isna().mean().values
+    col_nulls['row_null_percent'] = df.isna().mean().values
     
     # sort values by percent
-    col_null = col_null.sort_values(by=['row_null_percent'], ascending=False)
+    col_nulls = col_nulls.sort_values(by=['row_null_percent'], ascending=False)
     
     # create df for column with null count
     row_nulls = pd.DataFrame(df.isna().sum(axis=1), columns=['num_null_cols'])    
@@ -93,7 +93,7 @@ def get_null_tables():
     # sort df by percentn of null cols
     row_nulls = row_nulls.sort_values(by=['percent_null_cols'], ascending=False)
     
-    return col_ nulls, row_nulls
+    return col_nulls, row_nulls
 
 
 def handle_missing_values(df, percent_required_cols = .5, percent_required_rows = .7):
@@ -110,7 +110,7 @@ def handle_missing_values(df, percent_required_cols = .5, percent_required_rows 
     # drop rows with don't meet threshold for non-null values for columns
     df = df.dropna(axis=0, thresh=thresh_row)
     
-    return df, thresh_col, thresh_row
+    return df
 
 
 def remove_nulls(df):
@@ -143,6 +143,17 @@ def remove_nulls(df):
 
     return df
 
+
+def clean_zillow():
+    
+    df = get_zillow()
+    
+    df = handle_missing_values(df, percent_required_cols = .5, percent_required_rows = .7)
+    
+    df = remove_nulls(df)
+    
+    return df
+    
 
 
     
